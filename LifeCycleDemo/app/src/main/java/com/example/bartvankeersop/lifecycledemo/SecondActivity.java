@@ -49,6 +49,9 @@ public class SecondActivity extends AppCompatActivity {
         Toast.makeText(this, "Thread stopped.", Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * Writes a message every 5 seconds to the UI
+     */
     private class WriterRunnable implements Runnable {
 
         private volatile boolean stop;
