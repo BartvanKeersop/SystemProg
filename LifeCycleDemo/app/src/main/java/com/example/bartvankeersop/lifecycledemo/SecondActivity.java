@@ -77,7 +77,6 @@ public class SecondActivity extends AppCompatActivity {
         public WriterRunnable(String message){
             this.message = message;
             _stop = false;
-            Log.d("-LOG- VALUE OF STOP:", "TEST");
         }
 
         public void set_stop(boolean value){
