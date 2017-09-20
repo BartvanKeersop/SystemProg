@@ -12,12 +12,14 @@ import butterknife.OnClick;
 
 public class SecondActivity extends AppCompatActivity {
 
-    WriterRunnable writerRunnable;
+    WriterRunnable _writerRunnable;
+    int _counterThreadId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_second);
+        _counterThreadId = 1;
         ButterKnife.bind(this);
     }
 
@@ -29,12 +31,14 @@ public class SecondActivity extends AppCompatActivity {
         this.finish();
     }
 
+    /**
+     * Starts a thread that prints a message to the UI every 5 seconds.
+     */
     @OnClick(R.id.btnStartThread)
     public void StartThread() {
-        if (writerRunnable == null) {
-            writerRunnable = new WriterRunnable("Some random message \r\n", false);
-                Log.d("--------LOG--------", "Attempting to start thread");
-                Thread thread = new Thread(writerRunnable);
+        if (_writerRunnable == null) {
+            _writerRunnable = new WriterRunnable("Some random message \r\n");
+                Thread thread = new Thread(_writerRunnable);
                 thread.start();
         }
         else{
@@ -42,10 +46,23 @@ public class SecondActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Starts a thread that counts to 10 and writes it's id and count to the ui every 1 second.
+     */
+    @OnClick(R.id.btnStartAnotherThread)
+    public void StartAnotherThread() {
+        Thread thread = new Thread(new CounterRunnable(_counterThreadId));
+        _counterThreadId++;
+        thread.start();
+    }
+
+    /**
+     * Stops the messagewriter thread.
+     */
     @OnClick(R.id.btnStopThread)
     public void StopThread() {
-        writerRunnable.setStop(true);
-        writerRunnable = null;
+        _writerRunnable.set_stop(true);
+        _writerRunnable = null;
         Toast.makeText(this, "Thread stopped.", Toast.LENGTH_SHORT).show();
     }
 
@@ -54,31 +71,29 @@ public class SecondActivity extends AppCompatActivity {
      */
     private class WriterRunnable implements Runnable {
 
-        private volatile boolean stop;
+        private volatile boolean _stop;
         private String message;
 
-        public WriterRunnable(String message, boolean stop){
-
-            this.stop = stop;
+        public WriterRunnable(String message){
             this.message = message;
+            _stop = false;
             Log.d("-LOG- VALUE OF STOP:", "TEST");
         }
 
-        public void setStop(boolean value){
-            stop = value;
+        public void set_stop(boolean value){
+            _stop = value;
         }
 
-        public boolean getStop(){
-            return stop;
+        public boolean get_stop(){
+            return _stop;
         }
 
         @Override
         public void run() {
-            while (!stop) {
+            while (!_stop) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Log.d("--------LOG--------", message);
                         txtmessageBox.append(message);
                     }
                 });
@@ -86,9 +101,58 @@ public class SecondActivity extends AppCompatActivity {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                    Log.d("--------LOG--------", "THREAD INTERRUPTED");
                 }
             }
+        }
+    }
+
+    /**
+     * Counts up to 10, then terminates
+     */
+    private class CounterRunnable implements Runnable {
+
+        private volatile boolean _stop;
+        private int _id;
+        private int _counter;
+        private String _message;
+
+        public CounterRunnable(int id){
+            _stop = false;
+            _id = id;
+            _counter = 0;
+            _message = "";
+        }
+
+        @Override
+        public void run() {
+            while (!_stop) {
+
+                _message = "*Thread id: " + _id + " - Count:" + _counter + "\r\n";
+
+                if (_counter == 10){
+                    _message = _message +
+                            "!--Thread("
+                            + _id
+                            +") has finished counting to 10.--! \r\n";
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        txtmessageBox.append(_message);
+                    }
+                });
+                try {
+                    _counter++;
+                    if (_counter > 10){
+                        return;
+                    }
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
         }
     }
 }
