@@ -1,7 +1,10 @@
 package com.example.veikko.weathergetter;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,6 +23,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         findViewById(R.id.button).setOnClickListener(this);
+        getWeatherData();
     }
 
     @Override
@@ -46,8 +50,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        EditText editor = (EditText) findViewById(R.id.editText);
-        engine.getWeatherData(editor.getText().toString());
+        getWeatherData();
+    }
+
+    public void getWeatherData(){
+        try {
+            EditText editor = (EditText) findViewById(R.id.editText);
+            String location = editor.getText().toString();
+
+            SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+
+            if (location == null || location.equals("")) {
+                location = sharedPref.getString("last_used_location", "Oulu");
+                editor.append(location);
+            } else {
+                writeToSharedPreferences(location);
+            }
+            engine.getWeatherData(location);
+        }
+        catch(Exception e){
+            Log.d("---ERROR---", e.toString());
+        }
+    }
+
+    public void writeToSharedPreferences(String location){
+        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.clear();
+        editor.putString("last_used_location", location);
+        editor.commit();
     }
 
     protected void updateUI()
